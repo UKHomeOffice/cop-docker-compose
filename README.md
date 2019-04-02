@@ -28,7 +28,6 @@
 | UI_ENVIRONMENT| Tag for UI to show environment | DEVELOPMENT |
 | UI_VERSION | Tag for UI to show stage | ALPHA |
 | AUTH_CLIENT_ID | defaults to NAME ||
-| PRIVATE_UI_NAME| name of private ui pod | private_ui |
-| PRIVATE_FORM_NAME |
-| PRIVATE_WORKFLOW_ENGINE_NAME |
-| 
+| PRIVATE_UI_NAME| name of private ui pod | private-ui |
+| PRIVATE_FORM_NAME | name of formio pod | private-formio |
+| PRIVATE_WORKFLOW_ENGINE_NAME | name of workflow engine pod | private-workflow-engine |
