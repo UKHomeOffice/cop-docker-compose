@@ -1,0 +1,22 @@
+---
+apiVersion: extensions/v1beta1
+kind: NetworkPolicy
+metadata:
+  name: {{.NAME}}
+spec:
+  egress:
+    - {}
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              name: {{.PRIVATE_UI_NAME}}
+      ports:
+        - port: 10443
+          protocol: TCP
+  podSelector:
+    matchLabels:
+      name: {{.NAME}}
+  policyTypes:
+    - Ingress
+    - Egress

@@ -1,0 +1,238 @@
+pipeline:
+
+## Java app testing
+#  java-test:
+#    image: quay.io/ukhomeofficedigital/openjdk8:latest
+#    environment:
+#      - GRADLE_USER_HOME=~/.gradle
+#    commands:
+#      - ./gradlew test jacocoTestReport
+#    when:
+#      event:
+#        - push
+#        - pull_request
+
+
+## Node app testing
+#  node-test:
+#    image: node:8
+#    commands:
+#      - npm install
+#      - npm run coverage
+#    when:
+#      event:
+#      - push
+#      - pull_request
+
+
+## Code quality scanning
+  sonar-scanner:
+    image: quay.io/ukhomeofficedigital/sonar-scanner:v3.0.1
+    when:
+      status:
+        - failure
+        - success
+      event:
+        - push
+        - pull_request
+
+
+## Image building
+  build:
+    image: quay.io/ukhomeofficedigital/drone-docker
+    commands:
+      - docker build -t IMAGE_NAME:$${DRONE_BUILD_NUMBER} .
+    when:
+      event:
+        - push
+        - pull_request
+
+## Vulnerability Scanning
+  vulnerability-scan:
+    image: quay.io/ukhomeofficedigital/anchore-submission:latest
+    image_name: IMAGE_NAME:${DRONE_BUILD_NUMBER}
+    tolarates: medium
+    # An optional whitelist (comman separated list of CVE's)
+    # whitelist: CVE_SOMENAME_1,CVE_SOMENAME_2
+    # An optional whitelist file containing a list of CSV relative to the repo path
+    # whitelist_file: <PATH>
+    fail_on_detection: false
+    when:
+      event:
+        - push
+        - pull_request
+
+
+## Build Public Image
+  image_to_quay:
+    image: quay.io/ukhomeofficedigital/drone-docker
+    secrets:
+      - DOCKER_USERNAME
+      - DOCKER_PASSWORD
+    registry: quay.io
+    repo: quay.io/ukhomeofficedigital/IMAGE_NAME
+    tags:
+      - ${DRONE_BUILD_NUMBER}
+      - ${DRONE_COMMIT_SHA}
+      - latest
+    when:
+      branch:
+        - master
+      event:
+        - push
+
+## Build Private Image
+#  build_push_to_ecr:
+#    image: quay.io/ukhomeofficedigital/ecr:latest
+#    secrets:
+#    - AWS_ACCESS_KEY_ID
+#    - AWS_SECRET_ACCESS_KEY
+#    repo: XXX.dkr.ecr.eu-west-2.amazonaws.com/cop/IMAGE_NAME
+#    tags:
+#      - ${DRONE_BUILD_NUMBER}
+#      - ${DRONE_COMMIT_SHA}
+#      - latest
+#    when:
+#      branch: master
+#      event:
+#        - push
+
+  deploy_to_dev:
+    image: quay.io/ukhomeofficedigital/kd
+    secrets:
+      - DEV_NAME
+      - DEV_KUBE_NAMESPACE
+      - DEV_KUBE_SERVER
+      - DEV_KUBE_TOKEN
+      - DEV_INTERNAL_CA_URL
+      - DEV_NO_LOGGING_URL_PARAMS
+      - DEV_NO_LOGGING_BODY
+      - DEV_NO_LOGGING_RESPONSE
+      - DEV_KEYCLOAK_URL
+      - DEV_KEYCLOAK_REALM
+      - DEV_KEYCLOAK_SECRET
+      - DEV_INT_DOMAIN
+      - DEV_EXT_DOMAIN
+      - DEV_PROTOCOL
+      - DEV_PRIVATE_UI_NAME
+    commands:
+      - export NAME=$${DEV_NAME}
+      - export KUBE_NAMESPACE=$${DEV_KUBE_NAMESPACE}
+      - export KUBE_SERVER=$${DEV_KUBE_SERVER}
+      - export KUBE_TOKEN=$${DEV_KUBE_TOKEN}
+      - export INTERNAL_CA_URL=$${DEV_INTERNAL_CA_URL}
+      - export NO_LOGGING_URL_PARAMS=$${DEV_NO_LOGGING_URL_PARAMS}
+      - export NO_LOGGING_BODY=$${DEV_NO_LOGGING_BODY}
+      - export NO_LOGGING_RESPONSE=$${DEV_NO_LOGGING_RESPONSE}
+      - export KEYCLOAK_URL=$${DEV_KEYCLOAK_URL}
+      - export KEYCLOAK_REALM=$${DEV_KEYCLOAK_REALM}
+      - export KEYCLOAK_SECRET=$${DEV_KEYCLOAK_SECRET}
+      - export INT_DOMAIN=$${DEV_INT_DOMAIN}
+      - export EXT_DOMAIN=$${DEV_EXT_DOMAIN}
+      - export PROTOCOL=$${DEV_PROTOCOL}
+      - export PRIVATE_UI_NAME=$${DEV_PRIVATE_UI_NAME}
+      - export IMAGE_TAG=${DRONE_BUILD_NUMBER}
+      - kd --insecure-skip-tls-verify -f kube/network-policy.yml
+      - kd --insecure-skip-tls-verify -f kube/secret.yml
+      - kd --insecure-skip-tls-verify -f kube/service.yml
+      - kd --insecure-skip-tls-verify -f kube/deployment.yml
+      - kd --insecure-skip-tls-verify -f kube/ingress.yml
+    when:
+      branch:
+        - master
+      event:
+        - push
+        - deployment
+
+  deploy_to_test:
+    image: quay.io/ukhomeofficedigital/kd
+    secrets:
+      - TEST_NAME
+      - TEST_KUBE_NAMESPACE
+      - TEST_KUBE_SERVER
+      - TEST_KUBE_TOKEN
+      - TEST_INTERNAL_CA_URL
+      - TEST_NO_LOGGING_URL_PARAMS
+      - TEST_NO_LOGGING_BODY
+      - TEST_NO_LOGGING_RESPONSE
+      - TEST_KEYCLOAK_URL
+      - TEST_KEYCLOAK_REALM
+      - TEST_KEYCLOAK_SECRET
+      - TEST_INT_DOMAIN
+      - TEST_EXT_DOMAIN
+      - TEST_PROTOCOL
+      - TEST_PRIVATE_UI_NAME
+    commands:
+      - export NAME=$${TEST_NAME}
+      - export KUBE_NAMESPACE=$${TEST_KUBE_NAMESPACE}
+      - export KUBE_SERVER=$${TEST_KUBE_SERVER}
+      - export KUBE_TOKEN=$${TEST_KUBE_TOKEN}
+      - export INTERNAL_CA_URL=$${TEST_INTERNAL_CA_URL}
+      - export NO_LOGGING_URL_PARAMS=$${TEST_NO_LOGGING_URL_PARAMS}
+      - export NO_LOGGING_BODY=$${TEST_NO_LOGGING_BODY}
+      - export NO_LOGGING_RESPONSE=$${TEST_NO_LOGGING_RESPONSE}
+      - export KEYCLOAK_URL=$${TEST_KEYCLOAK_URL}
+      - export KEYCLOAK_REALM=$${TEST_KEYCLOAK_REALM}
+      - export KEYCLOAK_SECRET=$${TEST_KEYCLOAK_SECRET}
+      - export INT_DOMAIN=$${TEST_INT_DOMAIN}
+      - export EXT_DOMAIN=$${TEST_EXT_DOMAIN}
+      - export PROTOCOL=$${TEST_PROTOCOL}
+      - export PRIVATE_UI_NAME=$${TEST_PRIVATE_UI_NAME}
+      - export IMAGE_TAG=${DRONE_BUILD_NUMBER}
+      - kd --insecure-skip-tls-verify -f kube/network-policy.yml
+      - kd --insecure-skip-tls-verify -f kube/secret.yml
+      - kd --insecure-skip-tls-verify -f kube/service.yml
+      - kd --insecure-skip-tls-verify -f kube/deployment.yml
+      - kd --insecure-skip-tls-verify -f kube/ingress.yml
+    when:
+      branch:
+        - master
+      event:
+        - push
+        - deployment
+
+  deploy_to_demo:
+    image: quay.io/ukhomeofficedigital/kd
+    secrets:
+      - DEMO_NAME
+      - DEMO_KUBE_NAMESPACE
+      - DEMO_KUBE_SERVER
+      - DEMO_KUBE_TOKEN
+      - DEMO_INTERNAL_CA_URL
+      - DEMO_NO_LOGGING_URL_PARAMS
+      - DEMO_NO_LOGGING_BODY
+      - DEMO_NO_LOGGING_RESPONSE
+      - DEMO_KEYCLOAK_URL
+      - DEMO_KEYCLOAK_REALM
+      - DEMO_KEYCLOAK_SECRET
+      - DEMO_INT_DOMAIN
+      - DEMO_EXT_DOMAIN
+      - DEMO_PROTOCOL
+      - DEMO_PRIVATE_UI_NAME
+    commands:
+      - export NAME=$${DEMO_NAME}
+      - export KUBE_NAMESPACE=$${DEMO_KUBE_NAMESPACE}
+      - export KUBE_SERVER=$${DEMO_KUBE_SERVER}
+      - export KUBE_TOKEN=$${DEMO_KUBE_TOKEN}
+      - export INTERNAL_CA_URL=$${DEMO_INTERNAL_CA_URL}
+      - export NO_LOGGING_URL_PARAMS=$${DEMO_NO_LOGGING_URL_PARAMS}
+      - export NO_LOGGING_BODY=$${DEMO_NO_LOGGING_BODY}
+      - export NO_LOGGING_RESPONSE=$${DEMO_NO_LOGGING_RESPONSE}
+      - export KEYCLOAK_URL=$${DEMO_KEYCLOAK_URL}
+      - export KEYCLOAK_REALM=$${DEMO_KEYCLOAK_REALM}
+      - export KEYCLOAK_SECRET=$${DEMO_KEYCLOAK_SECRET}
+      - export INT_DOMAIN=$${DEMO_INT_DOMAIN}
+      - export EXT_DOMAIN=$${DEMO_EXT_DOMAIN}
+      - export PROTOCOL=$${DEMO_PROTOCOL}
+      - export PRIVATE_UI_NAME=$${DEMO_PRIVATE_UI_NAME}
+      - export IMAGE_TAG=${DRONE_BUILD_NUMBER}
+      - kd --insecure-skip-tls-verify -f kube/network-policy.yml
+      - kd --insecure-skip-tls-verify -f kube/secret.yml
+      - kd --insecure-skip-tls-verify -f kube/service.yml
+      - kd --insecure-skip-tls-verify -f kube/deployment.yml
+      - kd --insecure-skip-tls-verify -f kube/ingress.yml
+    when:
+      branch:
+        - master
+      event:
+        - deployment
