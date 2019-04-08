@@ -1,8 +1,20 @@
 pipeline:
 
+## Java app build
+#  java-test:
+#    image: uay.io/digitalpatterns/jdk:latest
+#    environment:
+#      - GRADLE_USER_HOME=~/.gradle
+#    commands:
+#      - ./gradlew assemble
+#    when:
+#      event:
+#        - push
+#        - pull_request
+
 ## Java app testing
 #  java-test:
-#    image: quay.io/ukhomeofficedigital/openjdk8:latest
+#    image: uay.io/digitalpatterns/jdk:latest
 #    environment:
 #      - GRADLE_USER_HOME=~/.gradle
 #    commands:
