@@ -1,6 +1,12 @@
 # COP Platform build
 
 
+# Developer standards
+The following are principles to be followed for committing code to COP repositories.
+* All code must be signed with a GPG key, (4096bit private part stored on a Yubikey, where possible)
+* All code is to be committed to master via a pull request.
+* Before merging unit tests and Sonar quality tests must pass
+
 
 # Default variables
 
