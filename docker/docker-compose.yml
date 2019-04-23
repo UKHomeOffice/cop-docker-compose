@@ -33,7 +33,7 @@ services:
       - KEYCLOAK_IMPORT=/tmp/realm.json
       - PROXY_ADDRESS_FORWARDING=true
     volumes:
-      - ${PWD}/keycloak/realm.json:/tmp/realm.json
+      - ${PWD}/keycloak/dev/dev-realm.json:/tmp/realm.json
       - ${PWD}/keycloak/sed.sh:/opt/jboss/startup-scripts/sed.sh
     depends_on:
       - postgres_keycloak
