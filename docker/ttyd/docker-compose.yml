@@ -1,0 +1,20 @@
+version: '3'
+
+services:
+  ttyd:
+    image: hackinglab/hl-kali-docker-ttyd
+    restart: on-failure
+    container_name: ttyd
+    networks:
+      - web
+    labels:
+      - "traefik.port=7681"
+      - "traefik.frontend.rule=Host:ttyd.lodev.xyz"
+      - "traefik.protocol=http"
+      - "traefik.enable=true"
+
+networks:
+  db:
+  web:
+    external:
+      name: web

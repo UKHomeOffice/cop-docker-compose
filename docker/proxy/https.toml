@@ -1,0 +1,33 @@
+debug = true
+logLevel = "DEBUG"
+defaultEntryPoints = ["http", "https"]
+insecureSkipVerify = true
+
+[api]
+    entryPoint = "traefik"
+    dashboard = true
+    address = ":8080"
+
+[entryPoints]
+    [entryPoints.http]
+    address = ":80"
+    [entryPoints.https]
+    address = ":443"
+        [entryPoints.https.tls]
+
+[retry]
+
+[docker]
+    endpoint = "unix:///var/run/docker.sock"
+    watch = true
+    exposedByDefault = true
+
+[acme]
+    storage = "/etc/traefik/acme/acme.json"
+    entryPoint = "https"
+    acmeLogging = true
+    onHostRule = true
+
+[acme.dnsChallenge]
+    provider = "route53"
+    delayBeforeCheck = 0

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-docker run --rm --network=local_dev\
+docker run --rm --network=db\
     --name keycloak_exporter\
     -v ${PWD}/dev:/tmp/keycloak-export\
     -e DB_DATABASE=keycloak\

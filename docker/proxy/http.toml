@@ -1,0 +1,20 @@
+debug = true
+logLevel = "DEBUG"
+defaultEntryPoints = ["http"]
+insecureSkipVerify = true
+
+[api]
+    entryPoint = "traefik"
+    dashboard = true
+    address = ":8080"
+
+[entryPoints]
+    [entryPoints.http]
+    address = ":80"
+
+[retry]
+
+[docker]
+    endpoint = "unix:///var/run/docker.sock"
+    watch = true
+    exposedByDefault = true
