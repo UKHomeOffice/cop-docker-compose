@@ -4,6 +4,10 @@ version: '3.7'
 volumes:
   postgres_data_keycloak:
     driver: local
+  postgres_data_workflow:
+    driver: local
+  postgres_data_refdata:
+    driver: local
 
 
 services:
@@ -115,6 +119,158 @@ services:
       retries: 15
       start_period: 30s
 
+  postgres_workflow:
+    image: postgres:10-alpine
+    restart: on-failure
+    container_name: postgres_workflow
+    volumes:
+      - postgres_data_workflow:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: workflow
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: workflow
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    networks:
+      - db
+    labels:
+      - "traefik.enable=false"
+
+  redis_workflow:
+    image: redis:5-alpine
+    container_name: redis_workflow
+    networks:
+      - db
+    labels:
+      - "traefik.enable=false"
+
+  workflow:
+    image: quay.io/ukhomeofficedigital/cop-private-workflow-engine:${WORKFLOW_IMAGE}
+    restart: on-failure
+    container_name: workflow
+    environment:
+      JAVA_OPTS: "-XX:PermSize=4096m -Djavax.net.debug=true"
+      ENGINE_DB_DRIVER: org.postgresql.Driver
+      CAMUNDA_DB_TYPE: postgres
+      KEYCLOAK_REALM: dev
+      KEYCLOAK_AUTH_URL: "https://keycloak.${DOMAINNAME}/auth"
+      KEYCLOAK_AUTH_SECRET: "9d9f6718-90f3-4626-b912-bfcd655ab27f"
+      KEYCLOAK_CLIENT_ID: workflow
+      SPRING_PROFILES_ACTIVE: local
+      ENGINE_DB_URL: "jdbc:postgresql://postgres_workflow:5432/workflow"
+      ENGINE_DB_USERNAME: postgres
+      ENGINE_DB_PASSWORD: workflow
+      PLATFORM_DATA_URL: "NOTREQUIRED"
+      PUBLIC_UI_PROTOCOL: "NOTREQUIRED"
+      PUBLIC_UI_TXT_PROTOCOL: "NOTREQUIRED"
+      PRIVATE_REDIS_URL: redis_workflow
+      PRIVATE_REDIS_PORT: 6379
+      PRIVATE_REDIS_TOKEN: null
+      GOV_NOTIFY_CLIENT_ID: "NOTREQUIRED"
+      GOV_NOTIFY_NOTIFICATION_EMAIL_TEMPLATE_ID: "NOTREQUIRED"
+      GOV_NOTIFY_NOTIFICATION_SMS_TEMPLATE_ID: "NOTREQUIRED"
+    depends_on:
+      - postgres_workflow
+      - redis_workflow
+    networks:
+      - web
+      - db
+    labels:
+      - "traefik.enable=true"
+      - "traefik.frontend.rule=Host:workflow.${DOMAINNAME}"
+      - "traefik.port=8080"
+      - "traefik.protocol=http"
+      - "traefik.docker.network=web"
+
+  postgres_refdata:
+    image: postgres:10-alpine
+    restart: on-failure
+    container_name: postgres_refdata
+    volumes:
+      - postgres_data_refdata:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: mysecretpassword
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
+    ports:
+      - 5433:5432
+
+  public_refdata_flyway:
+    image: quay.io/ukhomeofficedigital/refdata:latest
+    container_name: public_refdata_flyway
+    command: /mnt/docker/run.sh
+    working_dir: /mnt
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_SERVER: postgres_refdata
+      POSTGRES_PORT: 5432
+      FLYWAY_INIT_USER: postgres
+      FLYWAY_INIT_PASSWORD: mysecretpassword
+      FLYWAY_PLACEHOLDERS_REFERENCE_DB_NAME: reference
+      FLYWAY_PLACEHOLDERS_REFERENCE_OWNER_NAME: ownerreference
+      FLYWAY_PLACEHOLDERS_REFERENCE_OWNER_PASSWORD: mysecretpassword
+      FLYWAY_PLACEHOLDERS_REFERENCE_SCHEMA: reference
+      FLYWAY_PLACEHOLDERS_GOVERNANCE_OWNER_NAME: ownergovernance
+      FLYWAY_PLACEHOLDERS_GOVERNANCE_OWNER_PASSWORD: mysecretpassword
+      FLYWAY_PLACEHOLDERS_GOVERNANCE_SCHEMA: governance
+      FLYWAY_PLACEHOLDERS_REFERENCE_AUTHENTICATOR_USER: authenticatorreference
+      FLYWAY_PLACEHOLDERS_REFERENCE_AUTHENTICATOR_PASSWORD: auth1234
+      FLYWAY_PLACEHOLDERS_REFERENCE_ANON_USER: webanon
+      FLYWAY_PLACEHOLDERS_REFERENCE_SERVICE_USER: servicereferance
+      FLYWAY_PLACEHOLDERS_REFERENCE_READONLY_USER: readonlyreferance
+      FLYWAY_PLACEHOLDERS_GOVERNANCE_AUTHENTICATOR_USER: authenticatorgovernance
+      FLYWAY_PLACEHOLDERS_GOVERNANCE_AUTHENTICATOR_PASSWORD: auth1234
+      FLYWAY_PLACEHOLDERS_GOVERNANCE_ANON_USER: webanongovernance
+      FLYWAY_PLACEHOLDERS_GOVERNANCE_SERVICE_USER: servicegovernance
+      FLYWAY_PLACEHOLDERS_GOVERNANCE_READONLY_USER: readonlygovernance
+    volumes:
+      - ${PUBLIC_REFDATA_FLYWAY}:/mnt
+    depends_on:
+      - postgres_refdata
+
+  private_refdata_flyway:
+    image: quay.io/ukhomeofficedigital/refdata:latest
+    container_name: private_refdata_flyway
+    command: /mnt/docker/run.sh
+    working_dir: /mnt
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_SERVER: postgres_refdata
+      POSTGRES_PORT: 5432
+      FLYWAY_INIT_USER: postgres
+      FLYWAY_INIT_PASSWORD: mysecretpassword
+      FLYWAY_PLACEHOLDERS_REFERENCE_DB_NAME: reference
+      FLYWAY_PLACEHOLDERS_REFERENCE_OWNER_NAME: ownerreference
+      FLYWAY_PLACEHOLDERS_REFERENCE_OWNER_PASSWORD: mysecretpassword
+      FLYWAY_PLACEHOLDERS_REFERENCE_SCHEMA: reference
+      FLYWAY_PLACEHOLDERS_GOVERNANCE_OWNER_NAME: ownergovernance
+      FLYWAY_PLACEHOLDERS_GOVERNANCE_OWNER_PASSWORD: mysecretpassword
+      FLYWAY_PLACEHOLDERS_GOVERNANCE_SCHEMA: governance
+      FLYWAY_PLACEHOLDERS_REFERENCE_AUTHENTICATOR_USER: authenticatorreference
+      FLYWAY_PLACEHOLDERS_REFERENCE_AUTHENTICATOR_PASSWORD: auth1234
+      FLYWAY_PLACEHOLDERS_REFERENCE_ANON_USER: webanon
+      FLYWAY_PLACEHOLDERS_REFERENCE_SERVICE_USER: servicereferance
+      FLYWAY_PLACEHOLDERS_REFERENCE_READONLY_USER: readonlyreferance
+      FLYWAY_PLACEHOLDERS_GOVERNANCE_AUTHENTICATOR_USER: authenticatorgovernance
+      FLYWAY_PLACEHOLDERS_GOVERNANCE_AUTHENTICATOR_PASSWORD: auth1234
+      FLYWAY_PLACEHOLDERS_GOVERNANCE_ANON_USER: webanongovernance
+      FLYWAY_PLACEHOLDERS_GOVERNANCE_SERVICE_USER: servicegovernance
+      FLYWAY_PLACEHOLDERS_GOVERNANCE_READONLY_USER: readonlygovernance
+    volumes:
+      - ${PRIVATE_REFDATA_FLYWAY}:/mnt
+    depends_on:
+      - postgres_refdata
+      - public_refdata_flyway
 
 networks:
   db:
