@@ -360,7 +360,7 @@ services:
       - "traefik.docker.network=web"
 
   private_ui:
-    image: quay.io/ukhomeofficedigital/cop-private-workflow-tasklist:latest
+    image: quay.io/ukhomeofficedigital/cop-private-workflow-tasklist:${PRIVATE_UI_IMAGE}
     restart: on-failure
     container_name: private_ui
     environment:
@@ -369,7 +369,7 @@ services:
       AUTH_REALM: "dev"
       AUTH_URL: "${SCHEME}://keycloak.${DOMAINNAME}/auth"
       AUTH_CLIENT_ID: "platform-ui"
-      AUTH_ACCESS_ROLE: ""
+      AUTH_ACCESS_ROLE: "platform"
     volumes:
       - ${PWD}/platform/ca-bundle.crt:/etc/ssl/certs/ca-bundle.crt
     networks:
@@ -381,6 +381,33 @@ services:
       - "traefik.protocol=http"
       - "traefik.docker.network=web"
 
+#  data-api:
+#    image: quay.io/ukhomeofficedigital/reference-data-api-service:${DATA_API_IMAGE}
+#    restart: on-failure
+#    container_name: data_api
+#    environment:
+#      POSTGREST_BASE_URL: "${SCHEME}:postgrest_reference.${DOMAINNAME}"
+#    labels:
+#      - "traefik.enable=true"
+#      - "traefik.frontend.rule=Host:data-api.${DOMAINNAME}"
+#      - "traefik.port=8080"
+#      - "traefik.protocol=http"
+#      - "traefik.docker.network=web"
+
+  data-ui:
+    image: quay.io/ukhomeofficedigital/ref-data-gov-tool:${DATA_UI_IMAGE}
+    restart: on-failure
+    container_name: data_ui
+    environment:
+      KEYCLOAK_AUTH_URL="${SCHEME}://keycloak.${DOMAINNAME}/auth"
+      KEYCLOAK_CLIENT_ID="refdata-ui"
+      KEYCLOAK_REALM="dev"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.frontend.rule=Host:data-ui.${DOMAINNAME}"
+      - "traefik.port=8080"
+      - "traefik.protocol=http"
+      - "traefik.docker.network=web"
 
 networks:
   db:
