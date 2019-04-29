@@ -420,39 +420,6 @@ services:
 
 #  operational_data:
 
-  mongo_cli:
-    image: mongo:latest
-    container_name: mongo_cli
-    command: >
-      bash -c "tail -f /dev/null"
-    depends_on:
-      - mongo
-    networks:
-      - db
-    labels:
-      - "traefik.enable=false"
-
-#  mongo_restore:
-#    image: mongo:latest
-#    container_name: mongo_restore
-#    restart: "no"
-#    command: >
-#      bash -c " mongoimport --uri $${MONGO_URI} --collection actions --drop --file /repo/forms/actions.json
-#      && mongoimport --uri $${MONGO_URI} --collection forms --drop --file /repo/forms/forms.json
-#      && mongoimport --uri $${MONGO_URI} --collection roles --drop --file /repo/forms/roles.json
-#      && mongoimport --uri $${MONGO_URI} --collection schema --drop --file /repo/forms/schema.json
-#      && mongoimport --uri $${MONGO_URI} --collection submissions --drop --file /repo/forms/submissions.json"
-#    environment:
-#      MONGO_URI: "mongodb://mongo:27017/formio"
-#    volumes:
-#      - ${COP_EXAMPLES_DATA}:/repo
-#    depends_on:
-#      - mongo
-#    networks:
-#      - db
-#    labels:
-#      - "traefik.enable=false"
-
   mongo:
     image: mongo:latest
     restart: on-failure
@@ -500,6 +467,9 @@ services:
       AUTH_CLIENT_ID: "translation"
       AUTH_REALM: "dev"
       AUTH_URL: "${SCHEME}://keycloak.${DOMAINNAME}/auth"
+    volumes:
+      - ${PWD}/platform/ca-bundle.crt:/etc/ssl/certs/ca-bundle.crt
+      - ${PWD}/platform/mobileid-key.pem:/enccerts/mobileid-key.pem
     depends_on:
       - keycloak
       - postgrest_reference
