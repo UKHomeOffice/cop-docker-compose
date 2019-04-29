@@ -140,9 +140,9 @@ services:
     labels:
       - "traefik.enable=false"
 
-  redis_workflow:
+  redis:
     image: redis:5-alpine
-    container_name: redis_workflow
+    container_name: redis
     networks:
       - db
     labels:
@@ -167,7 +167,7 @@ services:
       PLATFORM_DATA_URL: "NOTREQUIRED"
       PUBLIC_UI_PROTOCOL: "NOTREQUIRED"
       PUBLIC_UI_TXT_PROTOCOL: "NOTREQUIRED"
-      PRIVATE_REDIS_URL: redis_workflow
+      PRIVATE_REDIS_URL: redis
       PRIVATE_REDIS_PORT: 6379
       PRIVATE_REDIS_TOKEN: null
       GOV_NOTIFY_CLIENT_ID: "NOTREQUIRED"
@@ -175,7 +175,7 @@ services:
       GOV_NOTIFY_NOTIFICATION_SMS_TEMPLATE_ID: "NOTREQUIRED"
     depends_on:
       - postgres_workflow
-      - redis_workflow
+      - redis
     networks:
       - web
       - db
@@ -204,6 +204,10 @@ services:
       start_period: 20s
     ports:
       - 5433:5432
+    networks:
+      - db
+    labels:
+      - "traefik.enable=false"
 
   public_refdata_flyway:
     image: quay.io/ukhomeofficedigital/refdata:latest
@@ -226,8 +230,8 @@ services:
       FLYWAY_PLACEHOLDERS_REFERENCE_AUTHENTICATOR_USER: authenticatorreference
       FLYWAY_PLACEHOLDERS_REFERENCE_AUTHENTICATOR_PASSWORD: auth1234
       FLYWAY_PLACEHOLDERS_REFERENCE_ANON_USER: webanon
-      FLYWAY_PLACEHOLDERS_REFERENCE_SERVICE_USER: servicereferance
-      FLYWAY_PLACEHOLDERS_REFERENCE_READONLY_USER: readonlyreferance
+      FLYWAY_PLACEHOLDERS_REFERENCE_SERVICE_USER: servicereference
+      FLYWAY_PLACEHOLDERS_REFERENCE_READONLY_USER: readonlyreference
       FLYWAY_PLACEHOLDERS_GOVERNANCE_AUTHENTICATOR_USER: authenticatorgovernance
       FLYWAY_PLACEHOLDERS_GOVERNANCE_AUTHENTICATOR_PASSWORD: auth1234
       FLYWAY_PLACEHOLDERS_GOVERNANCE_ANON_USER: webanongovernance
@@ -237,6 +241,10 @@ services:
       - ${PUBLIC_REFDATA_FLYWAY}:/mnt
     depends_on:
       - postgres_refdata
+    networks:
+      - db
+    labels:
+      - "traefik.enable=false"
 
   private_refdata_flyway:
     image: quay.io/ukhomeofficedigital/refdata:latest
@@ -253,24 +261,126 @@ services:
       FLYWAY_PLACEHOLDERS_REFERENCE_OWNER_NAME: ownerreference
       FLYWAY_PLACEHOLDERS_REFERENCE_OWNER_PASSWORD: mysecretpassword
       FLYWAY_PLACEHOLDERS_REFERENCE_SCHEMA: reference
-      FLYWAY_PLACEHOLDERS_GOVERNANCE_OWNER_NAME: ownergovernance
-      FLYWAY_PLACEHOLDERS_GOVERNANCE_OWNER_PASSWORD: mysecretpassword
-      FLYWAY_PLACEHOLDERS_GOVERNANCE_SCHEMA: governance
       FLYWAY_PLACEHOLDERS_REFERENCE_AUTHENTICATOR_USER: authenticatorreference
       FLYWAY_PLACEHOLDERS_REFERENCE_AUTHENTICATOR_PASSWORD: auth1234
       FLYWAY_PLACEHOLDERS_REFERENCE_ANON_USER: webanon
-      FLYWAY_PLACEHOLDERS_REFERENCE_SERVICE_USER: servicereferance
-      FLYWAY_PLACEHOLDERS_REFERENCE_READONLY_USER: readonlyreferance
-      FLYWAY_PLACEHOLDERS_GOVERNANCE_AUTHENTICATOR_USER: authenticatorgovernance
-      FLYWAY_PLACEHOLDERS_GOVERNANCE_AUTHENTICATOR_PASSWORD: auth1234
-      FLYWAY_PLACEHOLDERS_GOVERNANCE_ANON_USER: webanongovernance
-      FLYWAY_PLACEHOLDERS_GOVERNANCE_SERVICE_USER: servicegovernance
-      FLYWAY_PLACEHOLDERS_GOVERNANCE_READONLY_USER: readonlygovernance
+      FLYWAY_PLACEHOLDERS_REFERENCE_SERVICE_USER: servicereference
+      FLYWAY_PLACEHOLDERS_REFERENCE_READONLY_USER: readonlyreference
     volumes:
       - ${PRIVATE_REFDATA_FLYWAY}:/mnt
     depends_on:
       - postgres_refdata
       - public_refdata_flyway
+    networks:
+      - db
+    labels:
+      - "traefik.enable=false"
+
+  postgrest_reference:
+    image: quay.io/ukhomeofficedigital/postgrest
+    restart: on-failure
+    container_name: postgrest_reference
+    environment:
+      PGRST_DB_URI: "postgres://authenticatorreference:auth1234@postgres_refdata:5432/reference"
+      PGRST_DB_ANON_ROLE: webanon
+      PGRST_SECRET_IS_BASE64: "false"
+      PGRST_JWT_AUD: postgrest-refdata
+      PGRST_ROLE_CLAIM_KEY: .refdbrole
+      PGRST_DB_SCHEMA: reference
+      PGRST_SERVER_PROXY_URI: "http://localhost:3000/"
+      KEYCLOAK_URL: "${SCHEME}://keycloak.${DOMAINNAME}"
+      KEYCLOAK_REALM: dev
+    command: /usr/local/bin/getKeycloakKey.sh
+    depends_on:
+      - postgres_refdata
+      - public_refdata_flyway
+    networks:
+      - web
+      - db
+    labels:
+      - "traefik.enable=true"
+      - "traefik.frontend.rule=Host:postgrest_reference.${DOMAINNAME}"
+      - "traefik.port=3000"
+      - "traefik.protocol=http"
+      - "traefik.docker.network=web"
+
+  postgrest_governance:
+    image: quay.io/ukhomeofficedigital/postgrest
+    restart: on-failure
+    container_name: postgrest_governance
+    environment:
+      PGRST_DB_URI: "postgres://authenticatorgovernance:auth1234@postgres_refdata:5432/reference"
+      PGRST_DB_ANON_ROLE: webanongovernance
+      PGRST_SECRET_IS_BASE64: "false"
+      PGRST_JWT_AUD: postgrest-governance
+      PGRST_ROLE_CLAIM_KEY: .govdbrole
+      PGRST_DB_SCHEMA: governance
+      PGRST_SERVER_PROXY_URI: "http://localhost:3000/"
+      KEYCLOAK_URL: "${SCHEME}://keycloak.${DOMAINNAME}"
+      KEYCLOAK_REALM: dev
+    command: /usr/local/bin/getKeycloakKey.sh
+    depends_on:
+      - postgres_refdata
+      - public_refdata_flyway
+    networks:
+      - web
+      - db
+    labels:
+      - "traefik.enable=true"
+      - "traefik.frontend.rule=Host:postgrest_governance.${DOMAINNAME}"
+      - "traefik.port=3000"
+      - "traefik.protocol=http"
+      - "traefik.docker.network=web"
+
+  reporting:
+    image: quay.io/ukhomeofficedigital/cop-private-reporting-service:${REPORTING_IMAGE}
+    restart: on-failure
+    container_name: reporting
+    environment:
+      PLATFORM_DATA_PROXY_URL: "${SCHEME}://operational_data/"
+      REPORTING_SERVICE_NAME: "reporting"
+      DOMAIN: "${DOMAINNAME}"
+      SESSION_NAME: dev
+      PRIVATE_REDIS_URL: redis
+      PRIVATE_REDIS_PORT: 6379
+      PRIVATE_REDIS_TOKEN: ""
+      SESSION_SECRET: reports
+      KEYCLOAK_REALM: dev
+      KEYCLOAK_AUTH_URL: "${SCHEME}://keycloak.${DOMAINNAME}/auth"
+      KEYCLOAK_CLIENT_ID: reporting
+    volumes:
+      - ${REPORTING_DATA}:/workflow-resources
+    networks:
+      - web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.frontend.rule=Host:reporting.${DOMAINNAME}"
+      - "traefik.port=8080"
+      - "traefik.protocol=http"
+      - "traefik.docker.network=web"
+
+  private_ui:
+    image: quay.io/ukhomeofficedigital/cop-private-workflow-tasklist:latest
+    restart: on-failure
+    container_name: private_ui
+    environment:
+      UI_ENVIRONMENT: "LOCAL"
+      UI_VERSION: "ALPHA"
+      AUTH_REALM: "dev"
+      AUTH_URL: "${SCHEME}://keycloak.${DOMAINNAME}/auth"
+      AUTH_CLIENT_ID: "platform-ui"
+      AUTH_ACCESS_ROLE: ""
+    volumes:
+      - ${PWD}/platform/ca-bundle.crt:/etc/ssl/certs/ca-bundle.crt
+    networks:
+      - web
+    labels:
+      - "traefik.enable=true"
+      - "traefik.frontend.rule=Host:private-ui.${DOMAINNAME}"
+      - "traefik.port=8080"
+      - "traefik.protocol=http"
+      - "traefik.docker.network=web"
+
 
 networks:
   db:
