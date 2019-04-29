@@ -10,5 +10,5 @@ git clone ssh://git@gitlab.digital.homeoffice.gov.uk:2222/cop/private-reports.gi
 cd reporting_data
 git checkout develop
 cd ${COP}
-git clone https://github.com/UKHomeOffice/cop-examples/tree/master/FormIO cop_examples
+git clone https://github.com/UKHomeOffice/cop-examples.git cop_examples
 

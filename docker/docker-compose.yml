@@ -337,36 +337,36 @@ services:
       - "traefik.protocol=http"
       - "traefik.docker.network=web"
 
-  reporting:
-    image: quay.io/ukhomeofficedigital/cop-private-reporting-service:${REPORTING_IMAGE}
-    restart: on-failure
-    container_name: reporting
-    environment:
-      PLATFORM_DATA_PROXY_URL: "${SCHEME}://operational_data/"
-      REPORTING_SERVICE_NAME: "reporting"
-      DOMAIN: "${DOMAINNAME}"
-      SESSION_NAME: dev
-      PRIVATE_REDIS_URL: redis
-      PRIVATE_REDIS_PORT: 6379
-      PRIVATE_REDIS_TOKEN: ""
-      SESSION_SECRET: reports
-      KEYCLOAK_REALM: dev
-      KEYCLOAK_AUTH_URL: "${SCHEME}://keycloak.${DOMAINNAME}/auth"
-      KEYCLOAK_CLIENT_ID: reporting
-    volumes:
-      - ${REPORTING_DATA}:/workflow-resources
-    networks:
-      - web
-    depends_on:
-      - keycloak
-      - operational_data
-      - postgrest_reference
-    labels:
-      - "traefik.enable=true"
-      - "traefik.frontend.rule=Host:reporting.${DOMAINNAME}"
-      - "traefik.port=8080"
-      - "traefik.protocol=http"
-      - "traefik.docker.network=web"
+#  reporting:
+#    image: quay.io/ukhomeofficedigital/cop-private-reporting-service:${REPORTING_IMAGE}
+#    restart: on-failure
+#    container_name: reporting
+#    environment:
+#      PLATFORM_DATA_PROXY_URL: "${SCHEME}://operational_data/"
+#      REPORTING_SERVICE_NAME: "reporting"
+#      DOMAIN: "${DOMAINNAME}"
+#      SESSION_NAME: dev
+#      PRIVATE_REDIS_URL: redis
+#      PRIVATE_REDIS_PORT: 6379
+#      PRIVATE_REDIS_TOKEN: ""
+#      SESSION_SECRET: reports
+#      KEYCLOAK_REALM: dev
+#      KEYCLOAK_AUTH_URL: "${SCHEME}://keycloak.${DOMAINNAME}/auth"
+#      KEYCLOAK_CLIENT_ID: reporting
+#    volumes:
+#      - ${REPORTING_DATA}:/workflow-resources
+#    networks:
+#      - web
+#    depends_on:
+#      - keycloak
+#      - operational_data
+#      - postgrest_reference
+#    labels:
+#      - "traefik.enable=true"
+#      - "traefik.frontend.rule=Host:reporting.${DOMAINNAME}"
+#      - "traefik.port=8080"
+#      - "traefik.protocol=http"
+#      - "traefik.docker.network=web"
 
   private_ui:
     image: quay.io/ukhomeofficedigital/cop-private-workflow-tasklist:${PRIVATE_UI_IMAGE}
@@ -422,7 +422,7 @@ services:
 
   mongo_cli:
     image: mongo:latest
-    container_name: mongocli
+    container_name: mongo_cli
     command: >
       bash -c "tail -f /dev/null"
     depends_on:
@@ -432,25 +432,26 @@ services:
     labels:
       - "traefik.enable=false"
 
-  mongo_restore:
-    image: mongo:latest
-    container_name: mongo_restore
-    command: >
-      bash -c " mongoimport --uri $${MONGO_URI} --collection actions --drop --file /repo/forms/actions.json
-      && mongoimport --uri $${MONGO_URI} --collection forms --drop --file /repo/forms/forms.json
-      && mongoimport --uri $${MONGO_URI} --collection roles --drop --file /repo/forms/roles.json
-      && mongoimport --uri $${MONGO_URI} --collection schema --drop --file /repo/forms/schema.json
-      && mongoimport --uri $${MONGO_URI} --collection submissions --drop --file /repo/forms/submissions.json"
-    environment:
-      MONGO_URI: "mongodb://mongo:27017/formio"
-    volumes:
-      - ${COP_EXAMPLES_DATA}:/repo
-    depends_on:
-      - mongo
-    networks:
-      - db
-    labels:
-      - "traefik.enable=false"
+#  mongo_restore:
+#    image: mongo:latest
+#    container_name: mongo_restore
+#    restart: "no"
+#    command: >
+#      bash -c " mongoimport --uri $${MONGO_URI} --collection actions --drop --file /repo/forms/actions.json
+#      && mongoimport --uri $${MONGO_URI} --collection forms --drop --file /repo/forms/forms.json
+#      && mongoimport --uri $${MONGO_URI} --collection roles --drop --file /repo/forms/roles.json
+#      && mongoimport --uri $${MONGO_URI} --collection schema --drop --file /repo/forms/schema.json
+#      && mongoimport --uri $${MONGO_URI} --collection submissions --drop --file /repo/forms/submissions.json"
+#    environment:
+#      MONGO_URI: "mongodb://mongo:27017/formio"
+#    volumes:
+#      - ${COP_EXAMPLES_DATA}:/repo
+#    depends_on:
+#      - mongo
+#    networks:
+#      - db
+#    labels:
+#      - "traefik.enable=false"
 
   mongo:
     image: mongo:latest
@@ -461,7 +462,7 @@ services:
       - --config
       - /config/mongod.conf
     volumes:
-      - ${PWD}/docker/mongo/mongod.conf:/config/mongod.conf
+      - ${PWD}/mongo/mongod.conf:/config/mongod.conf
       - mongo_data:/data
     networks:
       - db
@@ -469,23 +470,13 @@ services:
       - "traefik.enable=false"
 
   formio:
-    image: quay.io/ukhomeofficedigital/formio:${FORMIO_IMAGE}
+    image: quay.io/digitalpatterns/formio:latest
     restart: on-failure
     container_name: formio
     environment:
-      MONGO_HIGH_AVAILABILITY: 0
-      DB_SECRET: "potato"
-      PORT: 3001
-      USER_FORM: "admin"
-      USER_LOGIN_FORM: "admin/login"
-      PROJECT_TEMPLATE: "default"
-      DOMAIN: "${SCHEME}://fomrio.${DOMAINNAME}/formio/"
-      APIDOMAIN: "${SCHEME}://formio.${DOMAINNAME}/formio/"
-      ROOT_EMAIL: "dev1@local"
-      ROOT_PASSWORD: "password"
-      MONGO: "mongodb://mongo:27017/formio"
-      MONGO_SECRET: "fudge"
-      JWT_SECRET: "password"
+      FORMIO_DOMAIN: "${SCHEME}://formio.${DOMAINNAME}"
+      FORMIO_ROOT_EMAIL: "me@lodev.xyz"
+      FORMIO_ROOT_PASSWORD: "secret"
     depends_on:
       - mongo
     networks:
@@ -494,7 +485,7 @@ services:
     labels:
       - "traefik.enable=true"
       - "traefik.frontend.rule=Host:formio.${DOMAINNAME}"
-      - "traefik.port=8080"
+      - "traefik.port=3001"
       - "traefik.protocol=http"
       - "traefik.docker.network=web"
 
