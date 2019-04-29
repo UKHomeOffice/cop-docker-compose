@@ -8,6 +8,8 @@ volumes:
     driver: local
   postgres_data_refdata:
     driver: local
+  mongo_data:
+    driver: local
 
 
 services:
@@ -176,6 +178,7 @@ services:
     depends_on:
       - postgres_workflow
       - redis
+      - keycloak
     networks:
       - web
       - db
@@ -294,6 +297,7 @@ services:
     depends_on:
       - postgres_refdata
       - public_refdata_flyway
+      - keycloak
     networks:
       - web
       - db
@@ -322,6 +326,7 @@ services:
     depends_on:
       - postgres_refdata
       - public_refdata_flyway
+      - keycloak
     networks:
       - web
       - db
@@ -352,6 +357,10 @@ services:
       - ${REPORTING_DATA}:/workflow-resources
     networks:
       - web
+    depends_on:
+      - keycloak
+      - operational_data
+      - postgrest_reference
     labels:
       - "traefik.enable=true"
       - "traefik.frontend.rule=Host:reporting.${DOMAINNAME}"
@@ -394,20 +403,121 @@ services:
 #      - "traefik.protocol=http"
 #      - "traefik.docker.network=web"
 
-  data-ui:
-    image: quay.io/ukhomeofficedigital/ref-data-gov-tool:${DATA_UI_IMAGE}
-    restart: on-failure
-    container_name: data_ui
+#  data-ui:
+#    image: quay.io/ukhomeofficedigital/ref-data-gov-tool:${DATA_UI_IMAGE}
+#    restart: on-failure
+#    container_name: data_ui
+#    environment:
+#      KEYCLOAK_AUTH_URL="${SCHEME}://keycloak.${DOMAINNAME}/auth"
+#      KEYCLOAK_CLIENT_ID="refdata-ui"
+#      KEYCLOAK_REALM="dev"
+#    labels:
+#      - "traefik.enable=true"
+#      - "traefik.frontend.rule=Host:data-ui.${DOMAINNAME}"
+#      - "traefik.port=8080"
+#      - "traefik.protocol=http"
+#      - "traefik.docker.network=web"
+
+#  operational_data:
+
+  mongo_cli:
+    image: mongo:latest
+    container_name: mongocli
+    command: >
+      bash -c "tail -f /dev/null"
+    depends_on:
+      - mongo
+    networks:
+      - db
+    labels:
+      - "traefik.enable=false"
+
+  mongo_restore:
+    image: mongo:latest
+    container_name: mongo_restore
+    command: >
+      bash -c " mongoimport --uri $${MONGO_URI} --collection actions --drop --file /repo/forms/actions.json
+      && mongoimport --uri $${MONGO_URI} --collection forms --drop --file /repo/forms/forms.json
+      && mongoimport --uri $${MONGO_URI} --collection roles --drop --file /repo/forms/roles.json
+      && mongoimport --uri $${MONGO_URI} --collection schema --drop --file /repo/forms/schema.json
+      && mongoimport --uri $${MONGO_URI} --collection submissions --drop --file /repo/forms/submissions.json"
     environment:
-      KEYCLOAK_AUTH_URL="${SCHEME}://keycloak.${DOMAINNAME}/auth"
-      KEYCLOAK_CLIENT_ID="refdata-ui"
-      KEYCLOAK_REALM="dev"
+      MONGO_URI: "mongodb://mongo:27017/formio"
+    volumes:
+      - ${COP_EXAMPLES_DATA}:/repo
+    depends_on:
+      - mongo
+    networks:
+      - db
+    labels:
+      - "traefik.enable=false"
+
+  mongo:
+    image: mongo:latest
+    restart: on-failure
+    container_name: mongo
+    entrypoint:
+      - /usr/bin/mongod
+      - --config
+      - /config/mongod.conf
+    volumes:
+      - ${PWD}/docker/mongo/mongod.conf:/config/mongod.conf
+      - mongo_data:/data
+    networks:
+      - db
+    labels:
+      - "traefik.enable=false"
+
+  formio:
+    image: quay.io/ukhomeofficedigital/formio:${FORMIO_IMAGE}
+    restart: on-failure
+    container_name: formio
+    environment:
+      MONGO_HIGH_AVAILABILITY: 0
+      DB_SECRET: "potato"
+      PORT: 3001
+      USER_FORM: "admin"
+      USER_LOGIN_FORM: "admin/login"
+      PROJECT_TEMPLATE: "default"
+      DOMAIN: "${SCHEME}://fomrio.${DOMAINNAME}/formio/"
+      APIDOMAIN: "${SCHEME}://formio.${DOMAINNAME}/formio/"
+      ROOT_EMAIL: "dev1@local"
+      ROOT_PASSWORD: "password"
+      MONGO: "mongodb://mongo:27017/formio"
+      MONGO_SECRET: "fudge"
+      JWT_SECRET: "password"
+    depends_on:
+      - mongo
+    networks:
+      - web
+      - db
     labels:
       - "traefik.enable=true"
-      - "traefik.frontend.rule=Host:data-ui.${DOMAINNAME}"
+      - "traefik.frontend.rule=Host:formio.${DOMAINNAME}"
       - "traefik.port=8080"
       - "traefik.protocol=http"
       - "traefik.docker.network=web"
+
+  translation:
+    image: quay.io/ukhomeofficedigital/cop-private-translation-service:${TRANSLATION_IMAGE}
+    restart: on-failure
+    container_name: translation
+    environment:
+      FORM_URL: "${SCHEME}://formio.${DOMAINNAME}"
+      PLATFORM_DATA_URL: "${SCHEME}://operational_data.${DOMAINNAME}"
+      WORKFLOW_URL: "${SCHEME}://workflow.${DOMAINNAME}"
+      AUTH_CLIENT_ID: "translation"
+      AUTH_REALM: "dev"
+      AUTH_URL: "${SCHEME}://keycloak.${DOMAINNAME}/auth"
+    depends_on:
+      - keycloak
+      - postgrest_reference
+      - workflow
+      - formio
+    networks:
+      - web
+    labels:
+      - "traefik.enable=false"
 
 networks:
   db:
