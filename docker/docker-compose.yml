@@ -10,7 +10,8 @@ volumes:
     driver: local
   mongo_data:
     driver: local
-
+  postgres_data_operational:
+    driver: local
 
 services:
 
@@ -342,7 +343,7 @@ services:
 #    restart: on-failure
 #    container_name: reporting
 #    environment:
-#      PLATFORM_DATA_PROXY_URL: "${SCHEME}://operational_data/"
+#      PLATFORM_DATA_PROXY_URL: "${SCHEME}://postgrest_operational.${DOMAINNAME}/"
 #      REPORTING_SERVICE_NAME: "reporting"
 #      DOMAIN: "${DOMAINNAME}"
 #      SESSION_NAME: dev
@@ -359,7 +360,7 @@ services:
 #      - web
 #    depends_on:
 #      - keycloak
-#      - operational_data
+#      - postgrest_operational
 #      - postgrest_reference
 #    labels:
 #      - "traefik.enable=true"
@@ -418,8 +419,6 @@ services:
 #      - "traefik.protocol=http"
 #      - "traefik.docker.network=web"
 
-#  operational_data:
-
   mongo:
     image: mongo:latest
     restart: on-failure
@@ -462,7 +461,7 @@ services:
     container_name: translation
     environment:
       FORM_URL: "${SCHEME}://formio.${DOMAINNAME}"
-      PLATFORM_DATA_URL: "${SCHEME}://operational_data.${DOMAINNAME}"
+      PLATFORM_DATA_URL: "${SCHEME}://postgrest_operational.${DOMAINNAME}"
       WORKFLOW_URL: "${SCHEME}://workflow.${DOMAINNAME}"
       AUTH_CLIENT_ID: "translation"
       AUTH_REALM: "dev"
@@ -479,6 +478,49 @@ services:
       - web
     labels:
       - "traefik.enable=false"
+
+  postgres_operational:
+    image: postgres:10-alpine
+    restart: on-failure
+    container_name: postgres_operational
+    volumes:
+      - postgres_data_operational:/var/lib/postgresql/data
+    environment:
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: mysecretpassword
+    ports:
+      - 5434:5432
+
+  postgrest_operational:
+    image: quay.io/ukhomeofficedigital/postgrest
+    restart: on-failure
+    container_name: postgrest_operational
+    environment:
+      PGRST_DB_URI: "postgres://authenticator:auth1234@postgres_operational:5432/operational"
+      PGRST_DB_ANON_ROLE: web_anon
+      PGRST_SECRET_IS_BASE64: "false"
+      PGRST_JWT_AUD: postgrest-operational
+      PGRST_ROLE_CLAIM_KEY: .oppdbrole
+      PGRST_DB_SCHEMA: operational
+      PGRST_SERVER_PROXY_URI: "http://localhost:3000/"
+      KEYCLOAK_URL: "${SCHEME}://keycloak.${DOMAINNAME}"
+      KEYCLOAK_REALM: dev
+    command: /usr/local/bin/getKeycloakKey.sh
+    depends_on:
+      - postgres_operational
+      - operational_flyway
+      - keycloak
+    networks:
+      - web
+      - db
+    labels:
+      - "traefik.enable=true"
+      - "traefik.frontend.rule=Host:postgrest_operational.${DOMAINNAME}"
+      - "traefik.port=3000"
+      - "traefik.protocol=http"
+      - "traefik.docker.network=web"
+
 
 networks:
   db:
