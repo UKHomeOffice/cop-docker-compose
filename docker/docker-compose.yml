@@ -509,7 +509,7 @@ services:
     command: /usr/local/bin/getKeycloakKey.sh
     depends_on:
       - postgres_operational
-      - operational_flyway
+#      - operational_flyway
       - keycloak
     networks:
       - web
@@ -518,6 +518,30 @@ services:
       - "traefik.enable=true"
       - "traefik.frontend.rule=Host:postgrest_operational.${DOMAINNAME}"
       - "traefik.port=3000"
+      - "traefik.protocol=http"
+      - "traefik.docker.network=web"
+
+  vault:
+    build: vault/
+    restart: on-failure
+    container_name: vault
+    volumes:
+      - ${PWD}/vault/config:/vault/config
+      - ${PWD}/vault/policies:/vault/policies
+      - ${PWD}/vault/data:/vault/data
+      - ${PWD}/vault/logs:/vault/logs
+    environment:
+      VAULT_ADDR: "${SCHEME}://vault.${DOMAINNAME}"
+    command: server -config=/vault/config/vault-config.json
+    cap_add:
+      - IPC_LOCK
+    networks:
+      - web
+      - db
+    labels:
+      - "traefik.enable=true"
+      - "traefik.frontend.rule=Host:vault.${DOMAINNAME}"
+      - "traefik.port=8200"
       - "traefik.protocol=http"
       - "traefik.docker.network=web"
 
