@@ -492,6 +492,26 @@ services:
     ports:
       - 5434:5432
 
+  operational_flyway:
+    image: quay.io/ukhomeofficedigital/refdata:latest
+    container_name: operational_flyway
+    command: /mnt/docker/run.sh
+    working_dir: /mnt
+    environment:
+      PGPASSWORD: mysecretpassword
+      POSTGRES_DB: postgres
+      POSTGRES_USER: postgres
+      POSTGRES_SERVER: postgres_operational
+      POSTGRES_PORT: 5432
+    volumes:
+      - ${PRIVATE_OPERATIONAL_FLYWAY}:/mnt
+    depends_on:
+      - postgres_operational
+    networks:
+      - db
+    labels:
+      - "traefik.enable=false"
+
   postgrest_operational:
     image: quay.io/ukhomeofficedigital/postgrest
     restart: on-failure
@@ -521,29 +541,29 @@ services:
       - "traefik.protocol=http"
       - "traefik.docker.network=web"
 
-  vault:
-    build: vault/
-    restart: on-failure
-    container_name: vault
-    volumes:
-      - ${PWD}/vault/config:/vault/config
-      - ${PWD}/vault/policies:/vault/policies
-      - ${PWD}/vault/data:/vault/data
-      - ${PWD}/vault/logs:/vault/logs
-    environment:
-      VAULT_ADDR: "${SCHEME}://vault.${DOMAINNAME}"
-    command: server -config=/vault/config/vault-config.json
-    cap_add:
-      - IPC_LOCK
-    networks:
-      - web
-      - db
-    labels:
-      - "traefik.enable=true"
-      - "traefik.frontend.rule=Host:vault.${DOMAINNAME}"
-      - "traefik.port=8200"
-      - "traefik.protocol=http"
-      - "traefik.docker.network=web"
+#  vault:
+#    build: vault/
+#    restart: on-failure
+#    container_name: vault
+#    volumes:
+#      - ${PWD}/vault/config:/vault/config
+#      - ${PWD}/vault/policies:/vault/policies
+#      - ${PWD}/vault/data:/vault/data
+#      - ${PWD}/vault/logs:/vault/logs
+#    environment:
+#      VAULT_ADDR: "${SCHEME}://vault.${DOMAINNAME}"
+#    command: server -config=/vault/config/vault-config.json
+#    cap_add:
+#      - IPC_LOCK
+#    networks:
+#      - web
+#      - db
+#    labels:
+#      - "traefik.enable=true"
+#      - "traefik.frontend.rule=Host:vault.${DOMAINNAME}"
+#      - "traefik.port=8200"
+#      - "traefik.protocol=http"
+#      - "traefik.docker.network=web"
 
 
 networks:
