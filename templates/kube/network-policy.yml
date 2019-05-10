@@ -5,15 +5,19 @@ metadata:
   name: {{.NAME}}
 spec:
   egress:
-    - {}
+  - {}
   ingress:
-    - from:
-        - podSelector:
-            matchLabels:
-              name: {{.PRIVATE_UI_NAME}}
-      ports:
-        - port: 10443
-          protocol: TCP
+  - from:
+    - namespaceSelector:
+        matchLabels:
+          name: ingress-external
+  - from:
+      - podSelector:
+          matchLabels:
+            name: {{.PRIVATE_UI_NAME}}
+    ports:
+      - port: 10443
+        protocol: TCP
   podSelector:
     matchLabels:
       name: {{.NAME}}
