@@ -529,7 +529,7 @@ services:
     command: /usr/local/bin/getKeycloakKey.sh
     depends_on:
       - postgres_operational
-#      - operational_flyway
+      - operational_flyway
       - keycloak
     networks:
       - web

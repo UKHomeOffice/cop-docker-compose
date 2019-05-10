@@ -34,7 +34,10 @@ cd ${COP}
 git clone git@github.com:UKHomeOffice/RefData.git public_refdata_flyway
 git clone ssh://git@gitlab.digital.homeoffice.gov.uk:2222/cop/private-refdata.git private_refdata_flyway
 git clone ssh://git@gitlab.digital.homeoffice.gov.uk:2222/cop/private-reports.git reporting_data
-git clone ssh://git@gitlab.digital.homeoffice.gov.uk:2222/cop/private-operational-flyway.git private_operational_flyway
+git clone ssh://git@gitlab.digital.homeoffice.gov.uk:2222/cop/private_operational_flyway.git private_operational_flyway
+cd private_operational_flyway
+git checkout develop
+cd ${COP}
 cd reporting_data
 git checkout develop
 cd ${COP}

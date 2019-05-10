@@ -126,6 +126,7 @@ pipeline:
       - DEV_INT_DOMAIN
       - DEV_EXT_DOMAIN
       - DEV_PROTOCOL
+      - DEV_WHITELIST
       - DEV_PRIVATE_UI_NAME
     commands:
       - export NAME=$${DEV_NAME}
@@ -142,6 +143,7 @@ pipeline:
       - export INT_DOMAIN=$${DEV_INT_DOMAIN}
       - export EXT_DOMAIN=$${DEV_EXT_DOMAIN}
       - export PROTOCOL=$${DEV_PROTOCOL}
+      - export WHITELIST=$${DEV_WHITELIST}
       - export PRIVATE_UI_NAME=$${DEV_PRIVATE_UI_NAME}
       - export IMAGE_TAG=${DRONE_BUILD_NUMBER}
       - kd --insecure-skip-tls-verify -f kube/network-policy.yml
@@ -173,6 +175,7 @@ pipeline:
       - TEST_INT_DOMAIN
       - TEST_EXT_DOMAIN
       - TEST_PROTOCOL
+      - TEST_WHITELIST
       - TEST_PRIVATE_UI_NAME
     commands:
       - export NAME=$${TEST_NAME}
@@ -189,6 +192,7 @@ pipeline:
       - export INT_DOMAIN=$${TEST_INT_DOMAIN}
       - export EXT_DOMAIN=$${TEST_EXT_DOMAIN}
       - export PROTOCOL=$${TEST_PROTOCOL}
+      - export WHITELIST=$${TEST_WHITELIST}
       - export PRIVATE_UI_NAME=$${TEST_PRIVATE_UI_NAME}
       - export IMAGE_TAG=${DRONE_BUILD_NUMBER}
       - kd --insecure-skip-tls-verify -f kube/network-policy.yml
@@ -220,6 +224,7 @@ pipeline:
       - DEMO_INT_DOMAIN
       - DEMO_EXT_DOMAIN
       - DEMO_PROTOCOL
+      - DEMO_WHITELIST
       - DEMO_PRIVATE_UI_NAME
     commands:
       - export NAME=$${DEMO_NAME}
@@ -236,6 +241,7 @@ pipeline:
       - export INT_DOMAIN=$${DEMO_INT_DOMAIN}
       - export EXT_DOMAIN=$${DEMO_EXT_DOMAIN}
       - export PROTOCOL=$${DEMO_PROTOCOL}
+      - export WHITELIST=$${DEMO_WHITELIST}
       - export PRIVATE_UI_NAME=$${DEMO_PRIVATE_UI_NAME}
       - export IMAGE_TAG=${DRONE_BUILD_NUMBER}
       - kd --insecure-skip-tls-verify -f kube/network-policy.yml
