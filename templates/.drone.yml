@@ -128,6 +128,7 @@ pipeline:
       - DEV_PROTOCOL
       - DEV_WHITELIST
       - DEV_PRIVATE_UI_NAME
+      - DEV_UPTIME
     commands:
       - export NAME=$${DEV_NAME}
       - export KUBE_NAMESPACE=$${DEV_KUBE_NAMESPACE}
@@ -145,6 +146,7 @@ pipeline:
       - export PROTOCOL=$${DEV_PROTOCOL}
       - export WHITELIST=$${DEV_WHITELIST}
       - export PRIVATE_UI_NAME=$${DEV_PRIVATE_UI_NAME}
+      - export UPTIME=$${DEV_UPTIME}
       - export IMAGE_TAG=${DRONE_BUILD_NUMBER}
       - kd --insecure-skip-tls-verify -f kube/network-policy.yml
       - kd --insecure-skip-tls-verify -f kube/secret.yml
@@ -177,6 +179,7 @@ pipeline:
       - TEST_PROTOCOL
       - TEST_WHITELIST
       - TEST_PRIVATE_UI_NAME
+      - TEST_UPTIME
     commands:
       - export NAME=$${TEST_NAME}
       - export KUBE_NAMESPACE=$${TEST_KUBE_NAMESPACE}
@@ -195,6 +198,7 @@ pipeline:
       - export WHITELIST=$${TEST_WHITELIST}
       - export PRIVATE_UI_NAME=$${TEST_PRIVATE_UI_NAME}
       - export IMAGE_TAG=${DRONE_BUILD_NUMBER}
+      - export UPTIME=$${TEST_UPTIME}
       - kd --insecure-skip-tls-verify -f kube/network-policy.yml
       - kd --insecure-skip-tls-verify -f kube/secret.yml
       - kd --insecure-skip-tls-verify -f kube/service.yml
@@ -226,6 +230,7 @@ pipeline:
       - DEMO_PROTOCOL
       - DEMO_WHITELIST
       - DEMO_PRIVATE_UI_NAME
+      - DEMO_UPTIME
     commands:
       - export NAME=$${DEMO_NAME}
       - export KUBE_NAMESPACE=$${DEMO_KUBE_NAMESPACE}
@@ -244,6 +249,7 @@ pipeline:
       - export WHITELIST=$${DEMO_WHITELIST}
       - export PRIVATE_UI_NAME=$${DEMO_PRIVATE_UI_NAME}
       - export IMAGE_TAG=${DRONE_BUILD_NUMBER}
+      - export UPTIME=$${DEMO_UPTIME}
       - kd --insecure-skip-tls-verify -f kube/network-policy.yml
       - kd --insecure-skip-tls-verify -f kube/secret.yml
       - kd --insecure-skip-tls-verify -f kube/service.yml

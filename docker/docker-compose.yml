@@ -413,7 +413,7 @@ services:
       - ${PWD}/platform/mobileid-key.pem:/enccerts/mobileid-key.pem
     depends_on:
       - keycloak
-      - postgrest_reference
+#      - postgrest_reference
       - workflow
       - formio
     networks:
@@ -431,6 +431,8 @@ services:
       POSTGRES_DB: postgres
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: mysecretpassword
+    networks:
+      - db
     ports:
       - 5434:5432
 

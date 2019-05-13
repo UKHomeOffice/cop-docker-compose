@@ -4,7 +4,7 @@ kind: Deployment
 metadata:
   name: {{.NAME}}
   annotations:
-    downscaler/uptime: Mon-Fri 08:00-18:30 Europe/London
+    downscaler/uptime: {{.UPTIME}}
 spec:
   selector:
     matchLabels:
