@@ -280,94 +280,36 @@ services:
     labels:
       - "traefik.enable=false"
 
-  postgrest_reference:
-    image: quay.io/ukhomeofficedigital/postgrest
+  reporting:
+    image: quay.io/ukhomeofficedigital/cop-private-reporting-service:${REPORTING_IMAGE}
     restart: on-failure
-    container_name: postgrest_reference
+    container_name: reporting
     environment:
-      PGRST_DB_URI: "postgres://authenticatorreference:auth1234@postgres_refdata:5432/reference"
-      PGRST_DB_ANON_ROLE: webanon
-      PGRST_SECRET_IS_BASE64: "false"
-      PGRST_JWT_AUD: postgrest-refdata
-      PGRST_ROLE_CLAIM_KEY: .refdbrole
-      PGRST_DB_SCHEMA: reference
-      PGRST_SERVER_PROXY_URI: "http://localhost:3000/"
-      KEYCLOAK_URL: "${SCHEME}://keycloak.${DOMAINNAME}"
+      PLATFORM_DATA_PROXY_URL: "${SCHEME}://postgrest_operational.${DOMAINNAME}/"
+      REPORTING_SERVICE_NAME: "reporting"
+      DOMAIN: "${DOMAINNAME}"
+      SESSION_NAME: dev
+      PRIVATE_REDIS_URL: redis
+      PRIVATE_REDIS_PORT: 6379
+      PRIVATE_REDIS_TOKEN: ""
+      SESSION_SECRET: reports
       KEYCLOAK_REALM: dev
-    command: /usr/local/bin/getKeycloakKey.sh
-    depends_on:
-      - postgres_refdata
-      - public_refdata_flyway
-      - keycloak
+      KEYCLOAK_AUTH_URL: "${SCHEME}://keycloak.${DOMAINNAME}/auth"
+      KEYCLOAK_CLIENT_ID: reporting
+    volumes:
+      - ${REPORTING_DATA}:/workflow-resources
     networks:
       - web
-      - db
-    labels:
-      - "traefik.enable=true"
-      - "traefik.frontend.rule=Host:postgrest_reference.${DOMAINNAME}"
-      - "traefik.port=3000"
-      - "traefik.protocol=http"
-      - "traefik.docker.network=web"
-
-  postgrest_governance:
-    image: quay.io/ukhomeofficedigital/postgrest
-    restart: on-failure
-    container_name: postgrest_governance
-    environment:
-      PGRST_DB_URI: "postgres://authenticatorgovernance:auth1234@postgres_refdata:5432/reference"
-      PGRST_DB_ANON_ROLE: webanongovernance
-      PGRST_SECRET_IS_BASE64: "false"
-      PGRST_JWT_AUD: postgrest-governance
-      PGRST_ROLE_CLAIM_KEY: .govdbrole
-      PGRST_DB_SCHEMA: governance
-      PGRST_SERVER_PROXY_URI: "http://localhost:3000/"
-      KEYCLOAK_URL: "${SCHEME}://keycloak.${DOMAINNAME}"
-      KEYCLOAK_REALM: dev
-    command: /usr/local/bin/getKeycloakKey.sh
     depends_on:
-      - postgres_refdata
-      - public_refdata_flyway
       - keycloak
-    networks:
-      - web
-      - db
-    labels:
-      - "traefik.enable=true"
-      - "traefik.frontend.rule=Host:postgrest_governance.${DOMAINNAME}"
-      - "traefik.port=3000"
-      - "traefik.protocol=http"
-      - "traefik.docker.network=web"
-
-#  reporting:
-#    image: quay.io/ukhomeofficedigital/cop-private-reporting-service:${REPORTING_IMAGE}
-#    restart: on-failure
-#    container_name: reporting
-#    environment:
-#      PLATFORM_DATA_PROXY_URL: "${SCHEME}://postgrest_operational.${DOMAINNAME}/"
-#      REPORTING_SERVICE_NAME: "reporting"
-#      DOMAIN: "${DOMAINNAME}"
-#      SESSION_NAME: dev
-#      PRIVATE_REDIS_URL: redis
-#      PRIVATE_REDIS_PORT: 6379
-#      PRIVATE_REDIS_TOKEN: ""
-#      SESSION_SECRET: reports
-#      KEYCLOAK_REALM: dev
-#      KEYCLOAK_AUTH_URL: "${SCHEME}://keycloak.${DOMAINNAME}/auth"
-#      KEYCLOAK_CLIENT_ID: reporting
-#    volumes:
-#      - ${REPORTING_DATA}:/workflow-resources
-#    networks:
-#      - web
-#    depends_on:
-#      - keycloak
-#      - postgrest_operational
+      - postgrest_operational
 #      - postgrest_reference
-#    labels:
-#      - "traefik.enable=true"
-#      - "traefik.frontend.rule=Host:reporting.${DOMAINNAME}"
-#      - "traefik.port=8080"
-#      - "traefik.protocol=http"
-#      - "traefik.docker.network=web"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.frontend.rule=Host:reporting.${DOMAINNAME}"
+      - "traefik.port=8080"
+      - "traefik.protocol=http"
+      - "traefik.docker.network=web"
 
   private_ui:
     image: quay.io/ukhomeofficedigital/cop-private-workflow-tasklist:${PRIVATE_UI_IMAGE}
