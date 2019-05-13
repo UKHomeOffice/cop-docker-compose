@@ -3,6 +3,8 @@ apiVersion: extensions/v1beta1
 kind: Deployment
 metadata:
   name: {{.NAME}}
+  annotations:
+    downscaler/uptime: Mon-Fri 08:00-18:30 Europe/London
 spec:
   selector:
     matchLabels:
