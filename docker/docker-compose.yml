@@ -461,12 +461,12 @@ services:
     restart: on-failure
     container_name: postgrest_operational
     environment:
-      PGRST_DB_URI: "postgres://authenticator:auth1234@postgres_operational:5432/operational"
+      PGRST_DB_URI: "postgres://authenticatoroperation:auth1234@postgres_operational:5432/operation"
       PGRST_DB_ANON_ROLE: web_anon
       PGRST_SECRET_IS_BASE64: "false"
       PGRST_JWT_AUD: postgrest-operational
       PGRST_ROLE_CLAIM_KEY: .oppdbrole
-      PGRST_DB_SCHEMA: operational
+      PGRST_DB_SCHEMA: operation
       PGRST_SERVER_PROXY_URI: "http://localhost:3000/"
       KEYCLOAK_URL: "${SCHEME}://keycloak.${DOMAINNAME}"
       KEYCLOAK_REALM: dev
