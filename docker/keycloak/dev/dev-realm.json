@@ -1042,7 +1042,7 @@
     "surrogateAuthRequired" : false,
     "enabled" : true,
     "clientAuthenticatorType" : "client-secret",
-    "secret" : "**********",
+    "secret" : "a0a3fe49-3189-40d8-a67f-10673a1900e9",
     "redirectUris" : [ "*" ],
     "webOrigins" : [ "*" ],
     "notBefore" : 0,

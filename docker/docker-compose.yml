@@ -43,7 +43,7 @@ services:
       - "traefik.frontend.rule=Host:traefik.${DOMAINNAME}"
       - "traefik.port=8080"
       - "traefik.docker.network=web"
-      - "traefik.frontend.headers.SSLRedirect=true"
+      - "traefik.frontend.headers.SSLRedirect=false"
       - "traefik.frontend.headers.STSSeconds=315360000"
       - "traefik.frontend.headers.browserXSSFilter=true"
       - "traefik.frontend.headers.contentTypeNosniff=true"
@@ -160,8 +160,8 @@ services:
       ENGINE_DB_DRIVER: org.postgresql.Driver
       CAMUNDA_DB_TYPE: postgres
       KEYCLOAK_REALM: dev
-      KEYCLOAK_AUTH_URL: "https://keycloak.${DOMAINNAME}/auth"
-      KEYCLOAK_AUTH_SECRET: "9d9f6718-90f3-4626-b912-bfcd655ab27f"
+      KEYCLOAK_AUTH_URL: "${SCHEME}://keycloak.${DOMAINNAME}/auth"
+      KEYCLOAK_AUTH_SECRET: "a0a3fe49-3189-40d8-a67f-10673a1900e9"
       KEYCLOAK_CLIENT_ID: workflow
       SPRING_PROFILES_ACTIVE: local
       ENGINE_DB_URL: "jdbc:postgresql://postgres_workflow:5432/workflow"
