@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
-export COP="${HOME}/GIT/cop"
+source ./.env
 
 docker network create web
 docker network create db
 
 if [[ -f /sbin/ifconfig ]]
 then
-    sudo ifconfig lo0 alias 10.254.254.254
+    sudo ifconfig lo0 alias 10.254.254.254/32
 elif [[ -f /sbin/ip ]]
 then
     sudo ip addr add 10.254.254.254/32 dev lo
@@ -28,8 +28,8 @@ fi
 
 ## Cloning repos locally to get data
 
-mkdir -p ${COP}
-cd ${COP}
+mkdir -p ${COP_GIT}
+cd ${COP_GIT}
 
 git clone git@github.com:UKHomeOffice/RefData.git public_refdata_flyway
 git clone ssh://git@gitlab.digital.homeoffice.gov.uk:2222/cop/private-refdata.git private_refdata_flyway
@@ -37,8 +37,8 @@ git clone ssh://git@gitlab.digital.homeoffice.gov.uk:2222/cop/private-reports.gi
 git clone ssh://git@gitlab.digital.homeoffice.gov.uk:2222/cop/private_operational_flyway.git private_operational_flyway
 cd private_operational_flyway
 git checkout develop
-cd ${COP}
+cd ${COP_GIT}
 cd reporting_data
 git checkout develop
-cd ${COP}
+cd ${COP_GIT}
 git clone https://github.com/UKHomeOffice/cop-examples.git cop_examples
