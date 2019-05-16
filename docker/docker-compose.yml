@@ -303,7 +303,7 @@ services:
     depends_on:
       - keycloak
       - postgrest_operational
-#      - postgrest_reference
+#      - data-api
     labels:
       - "traefik.enable=true"
       - "traefik.frontend.rule=Host:reporting.${DOMAINNAME}"
@@ -333,33 +333,42 @@ services:
       - "traefik.protocol=http"
       - "traefik.docker.network=web"
 
-#  data-api:
-#    image: quay.io/ukhomeofficedigital/reference-data-api-service:${DATA_API_IMAGE}
-#    restart: on-failure
-#    container_name: data_api
-#    environment:
+  data-api:
+    image: quay.io/ukhomeofficedigital/reference-data-api-service:${DATA_API_IMAGE}
+    restart: on-failure
+    container_name: data_api
+    environment:
 #      POSTGREST_BASE_URL: "${SCHEME}:postgrest_reference.${DOMAINNAME}"
-#    labels:
-#      - "traefik.enable=true"
-#      - "traefik.frontend.rule=Host:data-api.${DOMAINNAME}"
-#      - "traefik.port=8080"
-#      - "traefik.protocol=http"
-#      - "traefik.docker.network=web"
+      REF_DATA_DB_CONNECTION_STRING: postgres://authenticatorreference:auth1234@postgres_refdata:5432/reference
+      LOG_LEVEL: DEBUG
+    networks:
+      - web
+      - db
+    labels:
+      - "traefik.enable=true"
+      - "traefik.frontend.rule=Host:data-api.${DOMAINNAME}"
+      - "traefik.port=5000"
+      - "traefik.protocol=http"
+      - "traefik.docker.network=web"
 
-#  data-ui:
-#    image: quay.io/ukhomeofficedigital/ref-data-gov-tool:${DATA_UI_IMAGE}
-#    restart: on-failure
-#    container_name: data_ui
-#    environment:
-#      KEYCLOAK_AUTH_URL="${SCHEME}://keycloak.${DOMAINNAME}/auth"
-#      KEYCLOAK_CLIENT_ID="refdata-ui"
-#      KEYCLOAK_REALM="dev"
-#    labels:
-#      - "traefik.enable=true"
-#      - "traefik.frontend.rule=Host:data-ui.${DOMAINNAME}"
-#      - "traefik.port=8080"
-#      - "traefik.protocol=http"
-#      - "traefik.docker.network=web"
+  data-ui:
+    image: quay.io/ukhomeofficedigital/ref-data-gov-tool:${DATA_UI_IMAGE}
+    restart: on-failure
+    container_name: data_ui
+    environment:
+      KEYCLOAK_AUTH_URL: "${SCHEME}://keycloak.${DOMAINNAME}/auth"
+      KEYCLOAK_CLIENT_ID: "refdata-ui"
+      KEYCLOAK_REALM: "dev"
+    networks:
+      - web
+    depends_on:
+      - data-api
+    labels:
+      - "traefik.enable=true"
+      - "traefik.frontend.rule=Host:data-ui.${DOMAINNAME}"
+      - "traefik.port=8080"
+      - "traefik.protocol=http"
+      - "traefik.docker.network=web"
 
   mongo:
     image: mongo:latest
@@ -408,12 +417,19 @@ services:
       AUTH_CLIENT_ID: "translation"
       AUTH_REALM: "dev"
       AUTH_URL: "${SCHEME}://keycloak.${DOMAINNAME}/auth"
+      PROTOCOL: "${SCHEME}://"
+      INT_DOMAIN: "${DOMAINNAME}"
+      FORMIO_SERVER_NAME: formio
+      OPERATIONAL_POSTGREST_NAME: postgrest_operational
+      REPORTING_SERVER_NAME: reporting
+      TRANSLATION_SERVER_NAME: translation
+      WORKFLOW_SERVER_NAME: workflow
     volumes:
       - ${PWD}/platform/ca-bundle.crt:/etc/ssl/certs/ca-bundle.crt
       - ${PWD}/platform/mobileid-key.pem:/enccerts/mobileid-key.pem
     depends_on:
       - keycloak
-#      - postgrest_reference
+#      - data-api
       - workflow
       - formio
     networks:
