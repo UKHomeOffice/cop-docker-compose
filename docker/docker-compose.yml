@@ -322,6 +322,13 @@ services:
       AUTH_URL: "${SCHEME}://keycloak.${DOMAINNAME}/auth"
       AUTH_CLIENT_ID: "platform-ui"
       AUTH_ACCESS_ROLE: "platform"
+      PROTOCOL: "${SCHEME}"
+      EXT_DOMAIN: "${DOMAINNAME}"
+      FORMIO_SERVER_NAME: formio
+      OPERATIONAL_POSTGREST_NAME: postgrest_operational
+      REPORTING_SERVER_NAME: reporting
+      TRANSLATION_SERVER_NAME: translation
+      WORKFLOW_SERVER_NAME: workflow
     volumes:
       - ${PWD}/platform/ca-bundle.crt:/etc/ssl/certs/ca-bundle.crt
     networks:
