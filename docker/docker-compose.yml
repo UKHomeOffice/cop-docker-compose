@@ -508,6 +508,42 @@ services:
       - "traefik.protocol=http"
       - "traefik.docker.network=web"
 
+  camunda_admin:
+    image: digitalpatterns/camunda-tools:latest
+    restart: on-failure
+    container_name: caumnda_admin
+    environment:
+      JAVA_OPTS: "-Djavax.net.debug=true -Dserver.tomcat.access-log-enabled=false -Dserver.tomcat.accesslog.directory=/tmp -Dserver.tomcat.accesslog.pattern=common"
+      ENGINE_DB_DRIVER: org.postgresql.Driver
+      DATABASE_TYPE: postgres
+      KEYCLOAK_REALM: dev
+      KEYCLOAK_AUTH_URL: "${SCHEME}://keycloak.${DOMAINNAME}/auth"
+      KEYCLOAK_CLIENT_ID: "camunda-ui"
+      KEYCLOAK_AUTH_ADMIN_CLIENT_ID: camunda-admin-client
+      KEYCLOAK_AUTH_ADMIN_CLIENT_SECRET: 43ab4b22-60c3-4f6c-90bd-925cfd75407a
+      KEYCLOAK_ADMIN_USERNAME: "camunda-admin-user"
+      KEYCLOAK_ADMIN_PASSWORD: "secret"
+      COCKPIT_ALLOWED_ROLES: "camunda-admins"
+      PROCESS_ENGINE_NAME: "cop"
+      ASYNC_EVENT_LOGGING: "true"
+      BANNER_MODE: "console"
+      ENGINE_DB_URL: "jdbc:postgresql://postgres_workflow:5432/workflow"
+      ENGINE_DB_USERNAME: postgres
+      ENGINE_DB_PASSWORD: workflow
+    depends_on:
+      - postgres_operational
+      - operational_flyway
+      - keycloak
+    networks:
+      - web
+      - db
+    labels:
+      - "traefik.enable=true"
+      - "traefik.frontend.rule=Host:camunda-admin.${DOMAINNAME}"
+      - "traefik.port=8080"
+      - "traefik.protocol=http"
+      - "traefik.docker.network=web"
+
 #  vault:
 #    build: vault/
 #    restart: on-failure

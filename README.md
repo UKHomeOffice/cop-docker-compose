@@ -66,6 +66,7 @@ To enable ease of use there are a few hard coded settings imported into keycloak
 Likewise FormIO has a hard coded default user currently of:
 * me@lodev.xyz:secret
 
+Some of the containers used by docker-compose are restricted, for access please see the relevant owners.
 
 ### Reset
 
