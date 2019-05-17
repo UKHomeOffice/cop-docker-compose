@@ -442,7 +442,11 @@ services:
     networks:
       - web
     labels:
-      - "traefik.enable=false"
+      - "traefik.enable=true"
+      - "traefik.frontend.rule=Host:translation.${DOMAINNAME}"
+      - "traefik.port=8080"
+      - "traefik.protocol=http"
+      - "traefik.docker.network=web"
 
   postgres_operational:
     image: postgres:10-alpine
