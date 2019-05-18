@@ -167,9 +167,10 @@ services:
       ENGINE_DB_URL: "jdbc:postgresql://postgres_workflow:5432/workflow"
       ENGINE_DB_USERNAME: postgres
       ENGINE_DB_PASSWORD: workflow
-      PLATFORM_DATA_URL: "NOTREQUIRED"
-      PUBLIC_UI_PROTOCOL: "NOTREQUIRED"
-      PUBLIC_UI_TXT_PROTOCOL: "NOTREQUIRED"
+      REF_DATA_ENDPOINT_URL: "${SCHEME}://data-api.${DOMAINNAME}"
+      PLATFORM_DATA_ENDPOINT_URL: "${SCHEME}://postgrest_operational.${DOMAINNAME}"
+      PUBLIC_UI_PROTOCOL: "http://"
+      PUBLIC_UI_TXT_PROTOCOL: "tel://"
       PRIVATE_REDIS_URL: redis
       PRIVATE_REDIS_PORT: 6379
       PRIVATE_REDIS_TOKEN: null
