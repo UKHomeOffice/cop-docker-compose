@@ -169,6 +169,7 @@ services:
       ENGINE_DB_PASSWORD: workflow
       REF_DATA_ENDPOINT_URL: "${SCHEME}://data-api.${DOMAINNAME}"
       PLATFORM_DATA_ENDPOINT_URL: "${SCHEME}://postgrest_operational.${DOMAINNAME}"
+      PRIVATE_UI_URL: "${SCHEME}://private-ui.${DOMAINNAME}"
       PUBLIC_UI_PROTOCOL: "http://"
       PUBLIC_UI_TXT_PROTOCOL: "tel://"
       PRIVATE_REDIS_URL: redis
@@ -330,6 +331,11 @@ services:
       REPORTING_SERVER_NAME: reporting
       TRANSLATION_SERVER_NAME: translation
       WORKFLOW_SERVER_NAME: workflow
+      TRANSLATION_SERVICE_URL: ${SCHEME}://translation.${DOMAINNAME}
+      OPERATIONAL_DATA_URL: ${SCHEME}://postgrest_operational.${DOMAINNAME}
+      FORM_SERVICE_URL: ${SCHEME}://formio.${DOMAINNAME}
+      WORKFLOW_SERVICE_URL: ${SCHEME}://workflow.${DOMAINNAME}
+
     volumes:
       - ${PWD}/platform/ca-bundle.crt:/etc/ssl/certs/ca-bundle.crt
     networks:
