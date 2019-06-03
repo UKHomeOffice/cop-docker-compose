@@ -440,6 +440,8 @@ services:
       REPORTING_SERVER_NAME: reporting
       TRANSLATION_SERVER_NAME: translation
       WORKFLOW_SERVER_NAME: workflow
+      PRIVATE_UI_NAME: private-ui
+      EXT_DOMAIN: ${DOMAINNAME}
     volumes:
       - ${PWD}/platform/ca-bundle.crt:/etc/ssl/certs/ca-bundle.crt
       - ${PWD}/platform/mobileid-key.pem:/enccerts/mobileid-key.pem
