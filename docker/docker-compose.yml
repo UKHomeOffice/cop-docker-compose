@@ -441,6 +441,7 @@ services:
       TRANSLATION_SERVER_NAME: translation
       WORKFLOW_SERVER_NAME: workflow
       PRIVATE_UI_NAME: private-ui
+      PRIVATE_FORM_NAME: formio
       EXT_DOMAIN: ${DOMAINNAME}
     volumes:
       - ${PWD}/platform/ca-bundle.crt:/etc/ssl/certs/ca-bundle.crt
@@ -458,6 +459,7 @@ services:
       - "traefik.port=8080"
       - "traefik.protocol=http"
       - "traefik.docker.network=web"
+      - "traefik.frontend.headers.customRequestHeaders=nginxId: NoCorrelationId"
 
   postgres_operational:
     image: postgres:10-alpine
