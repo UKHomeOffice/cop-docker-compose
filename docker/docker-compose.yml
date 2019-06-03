@@ -178,6 +178,8 @@ services:
       GOV_NOTIFY_CLIENT_ID: "NOTREQUIRED"
       GOV_NOTIFY_NOTIFICATION_EMAIL_TEMPLATE_ID: "NOTREQUIRED"
       GOV_NOTIFY_NOTIFICATION_SMS_TEMPLATE_ID: "NOTREQUIRED"
+    volumes:
+      - ${PRIVATE_WORKFLOW_RESOURCES}:/workflow-resources
     depends_on:
       - postgres_workflow
       - redis
