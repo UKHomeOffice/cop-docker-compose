@@ -1,0 +1,54 @@
+{
+  "environments": [
+    {
+      "id": "dev",
+      "label": "Development",
+      "url": "http://formio.lodev.xyz",
+      "description": "Local Dev environment",
+      "service": {
+        "formio": {
+          "username": "me@lodev.xyz",
+          "password": "secret"
+        },
+        "keycloak": {
+          "tokenUrl": "http://keycloak.lodev.xyz/auth/realms/dev/protocol/openid-connect/token",
+          "clientId": "formbuilder",
+          "secret": "e2043965-cb44-4746-babb-6f4fcc29b412"
+        }
+      },
+      "editable": true,
+      "variable-replacements": [
+        {
+          "{$.environmentContext.operationalDataUrl}": "http://postgrest_operational.lodev.xyz"
+        },
+        {
+          "{$.environmentContext.referenceDataUrl}": "http://data-api.lodev.xyz"
+        },
+        {
+          "{$.environmentContext.workflowUrl}": "http://workflow.lodev.xyz"
+        },
+        {
+          "{$.staffDetailsContext.staffId}": "{{guid}}"
+        },
+        {
+          "{$.keycloakContext.givenName}": "{{firstName}}"
+        },
+        {
+          "{$.keycloakContext.familyName}": "{{lastName}}"
+        },
+        {
+          "{$.keycloakContext.email}": "{{email}}"
+        },
+        {
+          "{$.keycloakContext.userName}": "{{email}}"
+        }
+      ]
+    }
+  ],
+  "gov-uk-enabled" : true,
+  "keycloak": {
+    "authUrl": "http://keycloak.lodev.xyz/auth",
+    "clientId": "platform-ui",
+    "realm": "dev"
+  }
+}

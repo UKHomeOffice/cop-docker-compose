@@ -354,8 +354,7 @@ services:
     restart: on-failure
     container_name: data_api
     environment:
-#      POSTGREST_BASE_URL: "${SCHEME}:postgrest_reference.${DOMAINNAME}"
-      REF_DATA_DB_CONNECTION_STRING: postgres://authenticatorreference:auth1234@postgres_refdata:5432/reference
+      DB_CONNECTION_STRING: postgres://authenticatorreference:auth1234@postgres_refdata:5432/reference
       LOG_LEVEL: DEBUG
     networks:
       - web
@@ -419,6 +418,26 @@ services:
       - "traefik.enable=true"
       - "traefik.frontend.rule=Host:formio.${DOMAINNAME}"
       - "traefik.port=3001"
+      - "traefik.protocol=http"
+      - "traefik.docker.network=web"
+
+  formbuilder:
+    image: digitalpatterns/form-builder:latest
+    restart: on-failure
+    container_name: formbuilder
+    environment:
+      PORT: "8080"
+    depends_on:
+      - formio
+    networks:
+      - web
+      - db
+    volumes:
+      - ${PWD}/formbuilder/appConfig.json:/config/appConfig.json
+    labels:
+      - "traefik.enable=true"
+      - "traefik.frontend.rule=Host:formbuilder.${DOMAINNAME}"
+      - "traefik.port=8080"
       - "traefik.protocol=http"
       - "traefik.docker.network=web"
 
