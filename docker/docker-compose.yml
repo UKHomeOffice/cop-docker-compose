@@ -168,7 +168,7 @@ services:
       ENGINE_DB_USERNAME: postgres
       ENGINE_DB_PASSWORD: workflow
       REF_DATA_ENDPOINT_URL: "${SCHEME}://data-api.${DOMAINNAME}"
-      PLATFORM_DATA_ENDPOINT_URL: "${SCHEME}://postgrest_operational.${DOMAINNAME}"
+      PLATFORM_DATA_URL: "${SCHEME}://postgrest_operational.${DOMAINNAME}"
       PRIVATE_UI_URL: "${SCHEME}://private-ui.${DOMAINNAME}"
       PUBLIC_UI_PROTOCOL: "http://"
       PUBLIC_UI_TXT_PROTOCOL: "tel://"
@@ -455,13 +455,14 @@ services:
       PROTOCOL: "${SCHEME}://"
       INT_DOMAIN: "${DOMAINNAME}"
       FORMIO_SERVER_NAME: formio
-      OPERATIONAL_POSTGREST_NAME: postgrest_operational
+      PRIVATE_POSTGREST_NAME: postgrest_operational
       REPORTING_SERVER_NAME: reporting
       TRANSLATION_SERVER_NAME: translation
-      WORKFLOW_SERVER_NAME: workflow
+      PRIVATE_WORKFLOW_ENGINE_NAME: workflow
       PRIVATE_UI_NAME: private-ui
       PRIVATE_FORM_NAME: formio
       EXT_DOMAIN: ${DOMAINNAME}
+      PRIVATE_REFDATA_URL: "http://data-api.${DOMAINNAME}/v1/entities"
     volumes:
       - ${PWD}/platform/ca-bundle.crt:/etc/ssl/certs/ca-bundle.crt
       - ${PWD}/platform/mobileid-key.pem:/enccerts/mobileid-key.pem
