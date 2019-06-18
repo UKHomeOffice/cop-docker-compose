@@ -49,6 +49,9 @@
   "keycloak": {
     "authUrl": "http://keycloak.lodev.xyz/auth",
     "clientId": "platform-ui",
-    "realm": "dev"
+    "realm": "dev",
+    "access-roles": ["formbuilder-readonly", "formbuilder-promotion", "formbuilder-edit"],
+    "promotion-roles": ["formbuilder-promotion"],
+    "edit-roles": ["formbuilder-promotion", "formbuilder-edit"]
   }
 }
