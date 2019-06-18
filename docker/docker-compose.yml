@@ -422,7 +422,7 @@ services:
       - "traefik.docker.network=web"
 
   formbuilder:
-    image: digitalpatterns/form-builder:latest
+    image: digitalpatterns/form-builder:${FORMBUILDER_VERSION}
     restart: on-failure
     container_name: formbuilder
     environment:
